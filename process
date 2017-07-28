@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+if [ ! -d $1 ]; then
+  echo "Source directory doesn't exist!"
+  exit 1
+elif [ ! -d $2 ]; then
+  echo "Destination directory doesn't exist!"
+  exit 1
+fi
+
+echo "Processing files from \"$1\" to \"$2\"..."
+
+find $1 -type f -name "*.pdf" -print0 | while IFS= read -r -d '' file; do
+  pypdfocr "$file"
+  /app/sort-by-filename --verbose "$file" "$2"
+done
+
+echo "Done!"
