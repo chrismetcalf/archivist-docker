@@ -11,9 +11,20 @@ fi
 
 echo "Processing files from \"$1\" to \"$2\"..."
 
-find $1 -type f -name "*.pdf" -print0 | while IFS= read -r -d '' file; do
-  pypdfocr "$file" && mv "$1`basename "$file" ".pdf"`_ocr.pdf" "$file"
+TMPDIR=/tmp/`mktemp archivist.XXXX`
+mkdir $TMPDIR
+pushd $1
+find . \( ! -regex '.*/\..*' \) -type f -name "*.pdf" -print0 | while IFS= read -r -d '' file; do
+  cp "$file" $TMPDIR
+
+  # Operating on the temp file
+  pushd $TMPDIR
+  pypdfocr "$file" && mv "`basename "$file" ".pdf"`_ocr.pdf" "$file"
   /app/sort-by-filename --verbose "$file" "$2"
+  popd
+
+  # Only at this point do we remove the source file
+  rm "$file"
 done
 
 echo "Done!"
